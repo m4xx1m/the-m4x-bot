@@ -1,0 +1,4 @@
+/src/configs/botconfig.json
+/src/sqt.py
+*.db*
+*.idea*

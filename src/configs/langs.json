@@ -1,0 +1,40 @@
+{
+  "langs": [
+    "en",
+    "ru"
+  ],
+
+  "lang_names": [
+    "English",
+    "Русский"
+  ],
+
+  "allCommands": {
+    "en": {
+      "start": "Start bot",
+      "help":  "Get help",
+      "distiort": "Distort replied sticker",
+      "donate": "Help me survive in Russia :3",
+      "contact": "Write to me"
+    },
+    "ru": {
+      "start": "Запуск бота",
+      "help":  "Получить помощь",
+      "distiort": "Дисторт реплайнутого (ответ на сообщение) стикера",
+      "donate": "Помоги мне дожить до того, как я найду работу",
+      "contact": "Связь со мной"
+    }
+  },
+
+  "start": "<b>Hello!\n\nCheck /help</b>",
+
+  "help": {
+    "en": "Avaliable commands:\n{allCommands}",
+    "ru": "Список доступных комманд:\n{allCommands}"
+  },
+
+  "setlang":{
+    "en": "<b>To change language enter</b> <code>/setlang <lang code></code>, <b>Avaliable languages:</b>\n{allLangs}",
+    "ru": "<b>Для смены языка введите</b> <code>/setlang <lang code></code>, <b>Доступные языки:</b>\n{allLangs}"
+  }
+}
