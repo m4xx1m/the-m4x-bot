@@ -41,18 +41,30 @@ def reg_handlers():
             username=str(message.from_user.username),
         )
 
-        log.info(f'New user! Name: {message.from_user.first_name}; ID: {message.from_user.id}; '
-                                                                              f'Username: {message.from_user.username}')
+        # log.info(f'New user! Name: {message.from_user.first_name}; ID: {message.from_user.id}; '
+        #                                                                       f'Username: {message.from_user.username}')
 
         await message.reply('Hello there!')
 
     @dp.message_handler(commands=['getlang'])
     async def sendLang(message: types.Message):
+        if message.chat.type != "private":
+            return
         await message.reply(db.get_user_lang(message.from_user.id))
 
     @dp.message_handler(commands=['pdc'])
     async def pdc(message: types.Message):
+        if message.chat.type != "private":
+            return
         db.upd_DsC(message.from_user.id, db.get_DsC(message.from_user.id)+1)
+
+    @dp.message_handler(commands=['getdsc'])
+    async def getmydsc(message: types.Message):
+        if message.chat.type != "private":
+            return
+        await message.reply(str(db.get_DsC(message.from_user.id)))
+
+
 async def main():
     try:
         await bot.send_message(m4xx1m, "<b>Bot Started</b>")
