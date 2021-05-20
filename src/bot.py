@@ -14,13 +14,13 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-db = DataBase()
+db = DataBase('nn.db')
 log = logging.getLogger(__name__)
 log.level = logging.INFO
 m4xx1m = 704477361
 loop = asyncio.get_event_loop()
-config = json.load("configs/botconfig.json")
-langs = json.load("configs/langs.json")
+config = json.load(open("configs/botconfig.json"))
+# langs = json.load(open("configs/langs.json"))
 
 bot = Bot(token=config['bot_token'])
 dp = Dispatcher(bot)
@@ -46,6 +46,13 @@ def reg_handlers():
 
         await message.reply('Hello there!')
 
+    @dp.message_handler(commands=['getlang'])
+    async def sendLang(message: types.Message):
+        await message.reply(db.get_user_lang(message.from_user.id))
+
+    @dp.message_handler(commands=['pdc'])
+    async def pdc(message: types.Message):
+        db.upd_DsC(message.from_user.id, db.get_DsC(message.from_user.id)+1)
 async def main():
     try:
         await bot.send_message(m4xx1m, "<b>Bot Started</b>")
