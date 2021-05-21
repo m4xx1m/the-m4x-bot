@@ -12,9 +12,12 @@ class DataBase:
     def new_user(self, date: str, uid: int, fname: str, username: str, distort_count: int = 0, limit: int = -1, lang: str = "en"):
         cur = self.con.cursor()
         cur.execute(
-            "INSERT INTO users(date, uid, fname, username, distort_count, \'limit\', lang) SELECT * FROM (SELECT :date, :uid, :fname, :username, :distort_count, :limit, :lang) AS tmp WHERE NOT EXISTS (SELECT uid FROM users WHERE uid=:uid) LIMIT 1",
+            "INSERT INTO users(date, uid, fname, username, distort_count, \'limit\', lang)"
+            " SELECT * FROM (SELECT :date, :uid, :fname, :username, :distort_count, :limit, :lang) AS tmp"
+            " WHERE NOT EXISTS (SELECT uid FROM users WHERE uid=:uid) LIMIT 1",
             {"date": date, "uid": uid, "fname": fname, "username": username, "distort_count": distort_count, "limit": limit, "lang": lang}
         )
+        cur.close()
         self.con.commit()
 
     def upd_user(self, uid: int, **kwargs):
@@ -34,6 +37,15 @@ class DataBase:
             uid,
             self.get_DsC(uid) + 1
         )
+
+    def updDB(self, users: list):
+        for uid, fname, username, distort_count, limit, lang in users:
+            cur = self.con.cursor()
+            cur.execute(
+                "update users(uid, distort_count, limit, lang)"
+                " set distort_count = :distort_count, limit = :limit, lang = :lang where uid = ?",
+                {"uid": uid, "fname": fname, "username": username, "distort_count": distort_count, "limit": limit, "lang": lang}
+            )
 
     def get_limit(self, uid: int):
         cur = self.con.cursor()
