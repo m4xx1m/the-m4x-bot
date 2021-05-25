@@ -7,9 +7,11 @@ log.level = logging.INFO
 
 
 class DataBase:
-    def __init__(self, dbname: str):
+    def __init__(self, dbname: str, lang_cfgs: dict = None, bot_config: dict = None):
         self.con = sqlite3.connect(dbname)
         self.upd_task = None
+        self.lang_configs = lang_cfgs
+        self.stock_limit = bot_config['stock_limit'] if bot_config else -1
         cur = self.con.cursor()
         cur.execute(
             'CREATE TABLE IF NOT EXISTS users (date text, uid integer, fname text, username text, distort_count integer, \'limit\' integer)'
@@ -19,12 +21,25 @@ class DataBase:
         )
         cur.close()
         self.last_BD_ch = self.con.total_changes
+        self.check_db()
         self.con.commit()
 
-    def new_user(self, uid: int, date: str, fname: str, username: str, distort_count: int = 0, limit: int = -1,
+    def __enter__(self, **kwargs):
+        self.__init__(**kwargs)
+        return self
+
+    def __exit__(self, **kwargs):
+        self.con.commit()
+        self.con.close()
+
+    def new_user(self, uid: int, date: str, fname: str, username: str, distort_count: int = 0, limit: int = None,
                  lang: str = 'en'):
         if self.get_user(uid):
             return False
+
+        if not isinstance(limit, int):
+            limit = self.stock_limit
+
         cur = self.con.cursor()
         cur.execute(
             "insert into users(date, uid, fname, username, distort_count, \'limit\', lang) "
@@ -34,6 +49,23 @@ class DataBase:
         )
         cur.close()
         return True
+
+    def check_db(self, uids=None):
+        cur = self.con.cursor()
+        if not uids:
+            uids = [uid[0] for uid in cur.execute('select uid from users')]
+
+        # lang
+        if self.lang_configs:
+            for uid in uids:
+                if self.get_lang(uid) not in self.lang_configs["all_langs"]:
+                    self.upd_user(uid=uid, lang=self.lang_configs['default_lang'])
+        else:
+            log.error('Langs config doesn\'t exists')
+
+        # limits
+        log.info(
+            f'{len([uid for uid in uids if self.get_limit(uid) != -1 and self.get_distort_count(uid) >= self.get_limit(uid)])} users exceeded the limit')
 
     def upd_user(self, uid: int, date: str = None, fname: str = None, username: str = None, distort_count: int = None,
                  limit: int = None, lang: str = None):
@@ -55,10 +87,11 @@ class DataBase:
         if not lang:
             lang = userinfo['lang']
 
-        cur.execute("update users set date=:date, uid=:uid, fname=:fname, username=:username, distort_count=:distort_count, 'limit'=:limit, lang=:lang where uid=:uid",
-                    {"date": date, "uid": uid, "fname": fname, "username": username, "distort_count": distort_count,
-                     "limit": limit, "lang": lang}
-                    )
+        cur.execute(
+            "update users set date=:date, uid=:uid, fname=:fname, username=:username, distort_count=:distort_count, 'limit'=:limit, lang=:lang where uid=:uid",
+            {"date": date, "uid": uid, "fname": fname, "username": username, "distort_count": distort_count,
+             "limit": limit, "lang": lang}
+            )
         cur.close()
         return True
 
@@ -103,8 +136,27 @@ class DataBase:
     def get_lang(self, uid):
         return self.get_user(uid)['lang']
 
+    def add_admin(self, uid: int, fname: str, username: str):
+        cur = self.con.cursor()
+        cur.execute(
+            'insert into admins(uid, fname, username) values(:uid, :fname, :username)',
+            {"uid": uid, "fname": fname, "username": username}
+        )
+        cur.close()
+        self.con.commit()
+        return True
+
+    def del_admin(self, uid: int):
+        cur = self.con.cursor()
+        cur.execute('delete from admins where uid=:uid', {"uid": uid})
+        cur.close()
+        self.con.commit()
+        return True
+
     def get_admins(self):
-        pass
+        cur = self.con.cursor()
+        admins = cur.execute('select uid from admins').fetchall()
+        return [admin[0] for admin in admins]
 
     def run_updates(self, timeout: int = 5):
         if not self.upd_task or self.upd_task.cancelled():

@@ -1,4 +1,6 @@
 {
+  "default_lang": "en",
+
   "all_langs": [
     "en",
     "ru"
@@ -36,5 +38,9 @@
   "setlang":{
     "en": "<b>To change language enter</b> <code>/setlang <lang code></code>, <b>Avaliable languages:</b>\n{allLangs}",
     "ru": "<b>Для смены языка введите</b> <code>/setlang <lang code></code>, <b>Доступные языки:</b>\n{allLangs}"
+  },
+
+  "state": {
+    "en": "<b>Config {cfNum}: {state}</b>"
   }
 }

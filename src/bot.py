@@ -2,7 +2,8 @@ import io
 import json
 import os
 import sys
-from utils import DataBase
+from utils import DataBase, Distorter, AdminFilter
+from utils.bot import answer, check_user
 import aiogram
 import asyncio
 from datetime import datetime
@@ -24,82 +25,103 @@ langs = json.load(open("configs/langs.json", encoding='utf-8'))
 
 bot = Bot(token=config['bot_token'])
 dp = Dispatcher(bot)
-db = DataBase('nn.db')
-
-
+db = DataBase(config['dbName'], lang_cfgs=langs)
 bot.parse_mode = "html"
 
 
 def reg_handlers():
-    @dp.message_handler(commands=['getuser'])
-    async def getuser(message: types.Message):
-        await message.reply(str(db.get_user(message.from_user.id)))
+    dp.filters_factory.bind(AdminFilter)
 
-    @dp.message_handler(commands=['start'])
+    @dp.message_handler(commands=['start'], chat_type='private')
     async def starter(message: types.Message):
-        if message.chat.type != "private":
+        if not db.get_user(message.from_user.id):
+            db.new_user(
+                date=str(datetime.utcnow()).split('.')[0],
+                uid=message.from_user.id,
+                fname=message.from_user.first_name,
+                username=str(message.from_user.username)
+            )
+
+            log.info(f'New user! Name: {message.from_user.first_name}; ID: {message.from_user.id}; '
+                     f'Username: {message.from_user.username}')
+
+        await answer()
+
+    @dp.message_handler(commands=['addadmin'], is_admin=True)
+    async def addadmin(message: types.Message):
+        uid = message.get_args().split()[0]
+
+        if not db.get_user(int(uid)):
+            await message.reply(f'{uid} not found in db')
             return
 
-        db.new_user(
-            date=str(datetime.utcnow()).split('.')[0],
-            uid=message.from_user.id,
-            fname=message.from_user.first_name,
-            username=str(message.from_user.username),
-        )
-
-        # log.info(f'New user! Name: {message.from_user.first_name}; ID: {message.from_user.id}; '
-        #                                                                       f'Username: {message.from_user.username}')
-
-        await message.reply('Hello there!')
-
-    @dp.message_handler(commands=['getlang'])
-    async def sendLang(message: types.Message):
-        if message.chat.type != "private":
+        if uid.isdigit():
+            await message.reply(db.add_admin(
+                uid=int(uid),
+                fname=db.get_fname(int(uid)),
+                username=db.get_username(int(uid))
+            ))
             return
-        await message.reply(str(db.get_lang(message.from_user.id)))
+        else:
+            log.error('Only integer')
 
-    @dp.message_handler(commands=['pdc'], run_task=lambda ms: ms.from_user.id in db.get_admins())
-    async def pdc(message: types.Message):
-        if message.chat.type != "private":
+    @dp.message_handler(commands=['getadmins'])
+    async def getadmins(message: types.Message):
+        await message.reply(str(db.get_admins()))
+
+    @dp.message_handler(commands=['deladmin'])
+    async def getadmins(message: types.Message):
+        arg = message.get_args().split()[0]
+
+        if not arg.isdigit():
+            await message.reply('Only integer')
             return
-        db.upd_user(message.from_user.id, distort_count=db.get_user(message.from_user.id)['distort_count']+1)
 
-    @dp.message_handler(commands=['getdsc'])
-    async def getmydsc(message: types.Message):
-        if message.chat.type != "private":
-            return
-        await message.reply(str(db.get_distort_count(message.from_user.id)))
+        await message.reply(str(db.del_admin(uid=int(arg))))
 
-    @dp.message_handler(commands=['getch'])
-    async def getch(message: types.Message):
-        await message.reply(db.con.total_changes)
-
-    @dp.message_handler(commands=['stop_bd_updates'], run_task=lambda ms: ms.from_user.id in db.get_admins())
+    @dp.message_handler(commands=['stop_bd_updates'], is_admin=True)
     async def stop_bd_updates(message: types.Message):
         await message.reply(str(db.stop_updates()))
 
-    @dp.message_handler(commands=['run_bd_updates'], run_task=lambda ms: ms.from_user.id in db.get_admins())
+    @dp.message_handler(commands=['run_bd_updates'], is_admin=True)
     async def run_bd_updates(message: types.Message):
-        await message.reply(str(db.run_updates(timeout=1)))
+        await message.reply(str(db.run_updates()))
 
-    @dp.message_handler(commands=['setlang'], run_task=lambda ms: ms.from_user.id in db.get_admins())
+    @dp.message_handler(commands=['setlang'], is_admin=True)
     async def user_set_lang(message: types.Message):
-        args = message.get_args().split(' ')
-        if len(args) != 2 or not args[0].isdigit() or not isinstance(args[1], str):
-            log.error(f'Incorrect input values: {args}')
+        arg = message.get_args().split()[0]
+
+        if arg[1] not in langs['all_langs']:
+            # TODO: add answer
             return
 
-        if args[1] not in langs['all_langs']:
-            log.error(f'Lang {args[1]} does not exists')
+        if db.upd_user(uid=message.from_user.id, lang=arg[1]):
+            # TODO: add answer
+            return
+        else:
+            # TODO: add answer
             return
 
-        await message.reply(str(
-            db.upd_user(
-                uid=int(args[0]),
-                lang=args[1]
-            )))
+    @dp.message_handler(commands=['p', 'ping'], is_admin=True)
+    async def ping(message: types.Message):
+        start = datetime.now()
+        msg = await message.reply("[оk]")
+        end = datetime.now()
+        duration = (end - start).microseconds / 1000
+        await msg.edit_text(f'[оk] {round(duration, 4)}ms')
 
-    @dp.message_handler(commands=['setuser'], run_task=lambda ms: ms.from_user.id in db.get_admins())
+    @dp.message_handler(commands=['setlimit'], is_admin=True)
+    async def setlimit(message: types.Message):
+        args = message.get_args().replace('me', message.from_user.id).split()[0:1]
+
+        for arg in args:
+            if not arg.isdigit():
+                await message.reply('Only integer')
+                return
+
+        await message.reply(db.upd_user(uid=int(args[0]), limit=int(args[1])))
+
+    @dp.message_handler(commands=['setuser'], is_admin=True)
     async def setuser(message: types.Message):
         try:
             args = eval(message.get_args())
@@ -112,6 +134,39 @@ def reg_handlers():
 
         await message.reply(db.upd_user(**args))
 
+    @dp.message_handler(commands=['distort'])
+    async def distort(message: types.Message):
+
+        reply = message.reply_to_message
+
+        if not reply:
+            await message.reply('noreply')
+            return
+        if not reply.sticker:
+            await message.reply('no stick')
+            return
+        if not reply.sticker.is_animated:
+            await message.reply('not animated')
+            return
+
+        file = io.BytesIO()
+        file.name = 'sticker.tgs'
+        await bot.download_file_by_id(file_id=reply.sticker.file_id, destination=file)
+        file.seek(0)
+
+        ds = Distorter()
+        distort_stickers = ds.distorting(
+            input_file=file.read(),
+            configs=config['distort_configs']
+        )
+
+        async for file in distort_stickers:
+            ms = await bot.send_animation(chat_id=message.chat.id, animation=file,
+                                          reply_to_message_id=message.message_id)
+            if not ms.sticker:
+                await ms.delete()
+        # with open('tgs.tgs', 'wb') as f:
+        #     f.write(file.read())
 
 
 async def main():
