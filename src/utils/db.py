@@ -25,10 +25,9 @@ class DataBase:
         self.con.commit()
 
     def __enter__(self, **kwargs):
-        self.__init__(**kwargs)
         return self
 
-    def __exit__(self, **kwargs):
+    def __exit__(self, *args, **kwargs):
         self.con.commit()
         self.con.close()
 
@@ -94,6 +93,13 @@ class DataBase:
             )
         cur.close()
         return True
+
+    def get_user_langs(self) -> dict:
+        cur = self.con.cursor()
+        _user_langs = {}
+        for row in cur.execute('select uid, lang from users'):
+            _user_langs[row[0]] = row[1]
+        return _user_langs
 
     @staticmethod
     def to_dict(user: tuple) -> dict:

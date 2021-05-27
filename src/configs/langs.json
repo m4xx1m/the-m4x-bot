@@ -11,7 +11,7 @@
     "Русский"
   ],
 
-  "allCommands": {
+  "all_commands": {
     "en": {
       "start": "Start bot",
       "help":  "Get help",
@@ -31,16 +31,16 @@
   "start": "<b>Hello!\n\nCheck /help</b>",
 
   "help": {
-    "en": "Avaliable commands:\n{allCommands}",
-    "ru": "Список доступных комманд:\n{allCommands}"
+    "en": "Avaliable commands:\n{all_commands}",
+    "ru": "Список доступных комманд:\n{all_commands}"
   },
 
   "setlang":{
-    "en": "<b>To change language enter</b> <code>/setlang <lang code></code>, <b>Avaliable languages:</b>\n{allLangs}",
-    "ru": "<b>Для смены языка введите</b> <code>/setlang <lang code></code>, <b>Доступные языки:</b>\n{allLangs}"
+    "en": "<b>To change language enter</b> <code>/setlang (lang code)</code>\n<b>Avaliable languages:</b>\n{all_langs}",
+    "ru": "<b>Для смены языка введите</b> <code>/setlang (код языка)</code>\n<b>Доступные языки:</b>\n{all_langs}"
   },
 
   "state": {
-    "en": "<b>Config {cfNum}: {state}</b>"
+    "en": "<b>Config {cf_num}: {state}</b>"
   }
 }

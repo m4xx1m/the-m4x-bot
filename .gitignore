@@ -3,3 +3,4 @@
 *.db*
 *.idea*
 /src/utils/filters.py
+*.tgs

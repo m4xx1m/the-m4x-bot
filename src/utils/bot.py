@@ -1,28 +1,45 @@
+import json
 import logging
 from datetime import datetime
-
+from .db import DataBase
+from .lang_type import Langs
 import aiogram
-from ..utils import DataBase
+from aiogram import types
 
 log = logging.getLogger('stickdistortbot_logger')
 log.level = logging.INFO
 
 
-class Bot(aiogram.Bot):
-    @staticmethod
-    async def answer(bot: aiogram.Bot, message: aiogram.types.Message, text: str, db: DataBase, langs: dict, **kwargs):
-        uid = message.from_user.id
-        userLang = db.get_lang(uid)
+def compile_awl(  # Answer With Lang
+        message: types.Message,
+        text: str,
+        langs: Langs,
+        all_commands: str = None,
+        all_langs: list = None,
+        **kwargs
+):
+    """Compiling text for answer"""
+    uid = message.from_user.id
 
-        if text not in langs.keys():
-            log.error(f'{text} not found in lang strings')
-            await message.reply('<b>ERROR</b>')
-            return
+    if uid not in langs.user_langs.keys():
+        with DataBase(dbname=json.load(open("configs/botconfig.json", encoding='utf-8'))['dbName']) as db:  # TODO: optimize it
+            langs.user_langs = db.get_user_langs()
 
-        await message.answer(langs[text][userLang].format(**kwargs))
+    if not langs.format_langs:
+        langs.format_langs = json.load(open("configs/flangs.json", encoding='utf-8'))  # TODO: optimize it
+
+    if text not in langs.format_langs.keys():
+        log.error(f'{text} not found in lang strings')
+        return
+
+    return langs.format_langs[text][langs.user_langs.get(uid)].format(
+        all_commands=all_commands,
+        all_langs=all_langs,
+        **kwargs
+    )
 
 
-async def check_user(message: aiogram.types.Message, db: DataBase):
+def check_user(message: aiogram.types.Message, db: DataBase):
     if not db.get_user(message.from_user.id):
         db.new_user(
             date=str(datetime.utcnow()).split('.')[0],
@@ -30,3 +47,11 @@ async def check_user(message: aiogram.types.Message, db: DataBase):
             fname=message.from_user.first_name,
             username=str(message.from_user.username),
         )
+
+
+def format_all_commands(all_commands: dict, lang_code) -> str:
+    return '\n'.join([f'/{key}: {value}' for key, value in all_commands[lang_code].items()])
+
+
+def update_langs(db: DataBase):
+    return db.get_user_langs()
