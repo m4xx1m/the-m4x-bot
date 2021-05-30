@@ -2,9 +2,8 @@ import io
 import json
 import os
 import sys
-from utils import DataBase, Distorter, AdminFilter
-from utils.bot import check_user, compile_awl, format_all_commands
-from utils.lang_type import Langs
+from utils import DataBase, Distorting, AdminFilter, AnswerCompiler
+from utils.bot import check_user, format_all_commands
 import aiogram
 import asyncio
 from datetime import datetime
@@ -22,22 +21,22 @@ log.level = logging.INFO
 m4xx1m = 704477361
 loop = asyncio.get_event_loop()
 config = json.load(open("configs/botconfig.json", encoding='utf-8'))
-flangs = json.load(open("configs/langs.json", encoding='utf-8'))
+langs = json.load(open("configs/langs.json", encoding='utf-8'))
 
 bot = Bot(token=config['bot_token'])
 dp = Dispatcher(bot)
 dp.filters_factory.bind(AdminFilter)
-db = DataBase(config['dbName'], lang_cfgs=flangs)
+db = DataBase(config['dbName'], lang_cfgs=langs)
 bot.parse_mode = "html"
-bot.format_langs = flangs
-langs = Langs(db, db.get_user_langs(), flangs)
+bot.format_langs = langs
 bot.bot_admins = db.get_admins()
+answer_compiler = AnswerCompiler(user_langs=db.get_user_langs(), format_langs=langs)
 
 
 def reg_handlers():  # TODO: categorize handlers
     @dp.message_handler(commands=['test'], is_admin=True)
     async def tester(message: types.Message):
-        await message.reply(compile_awl(message, 'setlang', langs))
+        await message.reply(answer_compiler.compile_awl(message.from_user.id, 'setlang'))
 
     @dp.message_handler(commands=['start'], chat_type='private')
     async def starter(message: types.Message):
@@ -52,21 +51,21 @@ def reg_handlers():  # TODO: categorize handlers
             log.info(f'New user! Name: {message.from_user.first_name}; ID: {message.from_user.id}; '
                      f'Username: {message.from_user.username}')
 
-        await message.reply(flangs['start'])
+        await message.reply(langs['start'])
 
     @dp.message_handler(commands=['help'])
     async def answer_help(message: types.Message):
-        await message.reply(compile_awl(message, 'help', langs,  # TODO: make beauty answer
-                                        all_commands=format_all_commands(
-                                            all_commands=flangs['all_commands'],
-                                            lang_code=db.get_lang(message.from_user.id)
-                                        )))
+        await message.reply(answer_compiler.compile_awl(message.from_user.id, 'help',
+                                                        all_commands=format_all_commands(
+                                                            all_commands=langs['all_commands'],
+                                                            lang_code=db.get_lang(message.from_user.id)
+                                                        )))
 
     @dp.message_handler(commands=['upLangs'], is_admin=False)
     async def upLangs(message: types.Message):
         langs.format_langs = json.load(open("configs/langs.json", encoding='utf-8'))
         langs.user_langs = db.get_user_langs()
-        await message.reply('True')  # TODO: make beauty answer
+        await message.reply('True')
 
     @dp.message_handler(commands=['addadmin'], is_admin=True)
     async def addadmin(message: types.Message):
@@ -77,14 +76,14 @@ def reg_handlers():  # TODO: categorize handlers
             return
 
         if uid.isdigit():
-            await message.reply(db.add_admin(  # TODO: make beauty answer
+            await message.reply(db.add_admin(
                 uid=int(uid),
                 fname=db.get_fname(int(uid)),
                 username=db.get_username(int(uid))
             ))
             return
         else:
-            log.error('Only integer')
+            await message.reply('Only integer')
 
     @dp.message_handler(commands=['getadmins'], is_admin=True)
     async def getadmins(message: types.Message):
@@ -98,26 +97,27 @@ def reg_handlers():  # TODO: categorize handlers
             await message.reply('Only integer')
             return
 
-        await message.reply(str(db.del_admin(uid=int(arg))))  # TODO: make beauty answer
+        await message.reply(str(db.del_admin(uid=int(arg))))
 
     @dp.message_handler(commands=['stop_bd_updates'], is_admin=True)
     async def stop_bd_updates(message: types.Message):
-        await message.reply(str(db.stop_updates()))  # TODO: make beauty answer
+        await message.reply(str(db.stop_updates()))
 
     @dp.message_handler(commands=['run_bd_updates'], is_admin=True)
     async def run_bd_updates(message: types.Message):
-        await message.reply(str(db.run_updates()))  # TODO: make beauty answer
+        await message.reply(str(db.run_updates()))
 
     @dp.message_handler(commands=['setlang'], is_admin=True)
     async def user_set_lang(message: types.Message):
         arg = message.get_args().split()[0]
 
-        if arg not in flangs['all_langs']:
-            await message.reply(f'lang_doesn\'t_found')  # TODO: add answer
+        if arg not in langs['all_langs']:
+            await message.reply(
+                answer_compiler.compile_awl(message.from_user.id, 'unknown_lang'))
             return
 
         if db.upd_user(uid=message.from_user.id, lang=arg):
-            await message.reply('true')  # TODO: add answer
+            await message.reply(answer_compiler.compile_awl(message.from_user.id, 'successfully'))
             return
         else:
             await message.reply('false')  # TODO: add answer
@@ -140,7 +140,11 @@ def reg_handlers():  # TODO: categorize handlers
                 await message.reply('Only integer')
                 return
 
-        await message.reply(db.upd_user(uid=int(args[0]), limit=int(args[1])))  # TODO: make beauty answer
+        await message.reply(db.upd_user(uid=int(args[0]), limit=int(args[1])))
+
+    @dp.message_handler(commands=['donate'])
+    async def donate(message: types.Message):
+        await message.reply(answer_compiler.compile_awl(message.from_user.id, 'donate'))
 
     @dp.message_handler(commands=['setuser'], is_admin=True)  # TODO: add to useless
     async def setuser(message: types.Message):
@@ -153,21 +157,17 @@ def reg_handlers():  # TODO: categorize handlers
         if not isinstance(args, dict):
             return
 
-        await message.reply(db.upd_user(**args))  # TODO: make beauty answer
+        await message.reply(db.upd_user(**args))
 
     @dp.message_handler(commands=['distort'])
     async def distort(message: types.Message):
-
         reply = message.reply_to_message
 
         if not reply:
             await message.reply('noreply')  # TODO: make beauty answer
             return
-        if not reply.sticker:
+        if not reply.sticker or not reply.sticker.is_animated:
             await message.reply('no stick')  # TODO: make beauty answer
-            return
-        if not reply.sticker.is_animated:
-            await message.reply('not animated')  # TODO: make beauty answer
             return
 
         file = io.BytesIO()
@@ -175,18 +175,47 @@ def reg_handlers():  # TODO: categorize handlers
         await bot.download_file_by_id(file_id=reply.sticker.file_id, destination=file)
         file.seek(0)
 
-        ds = Distorter()
-        distort_stickers = ds.distorting(
+        distort_stickers = Distorting(
             input_file=file.read(),
             configs=config['distort_configs']
         )
 
-        async for file in distort_stickers:
-            ms = await bot.send_animation(chat_id=message.chat.id, animation=file,
-                                          reply_to_message_id=message.message_id)
-            if not ms.sticker:
-                await ms.delete()
-        # TODO: add answer and progress animation
+        anim_configs = {}
+        for num in range(1, len(config['distort_configs']) + 1):
+            anim_configs[num] = 'Processing'
+
+        anim_message = await message.reply(
+            text=f'<b>Distorting!</b>\n' + '\n'.join(
+                [f'<b>{str(num)}</b>: <code>{str(state)}</code>' for num, state in anim_configs.items()]
+            )
+        )
+
+        async for num, file in distort_stickers:
+            if file:
+                ms = await bot.send_animation(chat_id=message.chat.id, animation=file,
+                                              reply_to_message_id=reply.message_id)
+                if not ms.sticker:
+                    await ms.delete()
+                    anim_configs[num] = 'Failed'
+                    await update_animation(anim_message, anim_configs)
+                    continue
+                anim_configs[num] = 'Done'
+                await update_animation(anim_message, anim_configs)
+            else:
+                anim_configs[num] = 'ERROR'
+                await update_animation(anim_message, anim_configs)
+
+        await asyncio.sleep(3)
+        # await anim_message.delete()
+
+
+async def update_animation(anim_message: types.Message, anim_cf):
+    _txt = f'<b>Distorting!</b>\n' + '\n'.join(
+        [f'<b>{str(num)}</b>: <code>{str(state)}</code>' for num, state in anim_cf.items()]
+    )
+    if anim_message.text != _txt:
+        await anim_message.edit_text(_txt)
+        log.info('UPD')
 
 
 async def main():

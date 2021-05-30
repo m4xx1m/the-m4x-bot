@@ -12,47 +12,54 @@
       "help":  "Get help",
       "distiort": "Distort replied sticker",
       "donate": "Help me survive in Russia :3",
-      "contact": "Write to me"
+      "contact": "Write to author"
     },
     "ru": {
       "start": "Запуск бота",
       "help":  "Получить помощь",
       "distiort": "Дисторт реплайнутого (ответ на сообщение) стикера",
       "donate": "Помоги мне дожить до того, как я найду работу",
-      "contact": "Связь со мной"
+      "contact": "Связь с автором"
     }
   },
 
   "start": "<b>Hello!\n\nCheck /help</b>",
 
   "all_admins": {
-    "en": "<b>Admins in {bot_name}:\n{admins}<>"
+    "en": "<b>Admins in {bot_name}:\n{admins}</b>",
+    "ru": "<b>Список админов в {bot_name}:\n{admins}</b>"
   },
 
   "not_animated": {
-    "en": "It's not animated sticker"
+    "en": "It's not animated sticker",
+    "ru": "Это не анимированный стикер"
   },
 
   "no_reply": {
-    "en": "No reply message"
+    "en": "No reply message",
+    "ru": "Нет ответа на стикер, с чем мне работать?"
   },
 
   "unknown_lang": {
-    "en": "Lang {selected_lang} doesn't found"
+    "en": "Lang {selected_lang} doesn't found",
+    "ru": "Язык {selected_lang} не поддерживается"
   },
 
   "successfully": {
-    "en": "Successfully!"
+    "en": "Successfully!",
+    "ru": "Успешно!"
   },
 
   "error_setting_lang": {
-    "en": "Language change error."
+    "en": "Language change error.",
+    "ru": "При смене языка произошла ошибка."
   },
 
 
 
   "donate": {
-    "en": "<b>Donate me:</b>\n<a href=\"https://qiwi.com/n/M4XX1M\">QIWI</a>\nSBERBANK: <code>88005553535</code>\nOr write <a href=\"https://t.me/m4xx1m\">me</a>"
+    "en": "<b>Donate me:</b>\n<a href=\"https://qiwi.com/n/M4XX1M\">QIWI</a>\nSBERBANK: <code>88005553535</code>\nOr write <a href=\"https://t.me/m4xx1m\">me</a>",
+    "ru": "<b>Помочь выжить в России:</b>\n<a href=\"https://qiwi.com/n/M4XX1M\">QIWI</a>\nSBERBANK: <code>88005553535</code>\nИли напишите: <a href=\"https://t.me/m4xx1m\">в лс</a>"
   },
 
   "help": {
