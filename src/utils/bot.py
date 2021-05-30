@@ -32,7 +32,11 @@ def compile_awl(  # Answer With Lang
         log.error(f'{text} not found in lang strings')
         return
 
-    return langs.format_langs[text][langs.user_langs.get(uid)].format(
+    ulang = langs.user_langs.get(uid)
+    if ulang not in langs.format_langs[text].keys():
+        ulang = 'en'
+
+    return langs.format_langs[text][ulang].format(
         all_commands=all_commands,
         all_langs=all_langs,
         **kwargs

@@ -1,15 +1,10 @@
 {
   "default_lang": "en",
 
-  "all_langs": [
-    "en",
-    "ru"
-  ],
-
-  "lang_names": [
-    "English",
-    "Русский"
-  ],
+  "all_langs": {
+    "en": "English",
+    "ru": "Russian"
+  },
 
   "all_commands": {
     "en": {
@@ -29,6 +24,14 @@
   },
 
   "start": "<b>Hello!\n\nCheck /help</b>",
+
+  "all_admins": {
+    "en": "<b>Admins in {bot_name}:\n{admins}<>"
+  },
+
+  "donate": {
+    "en": "<b>Donate me:</b>\n<a href=\"https://qiwi.com/n/M4XX1M\">QIWI</a>\nSBERBANK: <code>88005553535</code>\nOr write <a href=\"https://t.me/m4xx1m\">me</a>"
+  },
 
   "help": {
     "en": "Avaliable commands:\n{all_commands}",
