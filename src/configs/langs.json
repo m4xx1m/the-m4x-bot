@@ -29,6 +29,28 @@
     "en": "<b>Admins in {bot_name}:\n{admins}<>"
   },
 
+  "not_animated": {
+    "en": "It's not animated sticker"
+  },
+
+  "no_reply": {
+    "en": "No reply message"
+  },
+
+  "unknown_lang": {
+    "en": "Lang {selected_lang} doesn't found"
+  },
+
+  "successfully": {
+    "en": "Successfully!"
+  },
+
+  "error_setting_lang": {
+    "en": "Language change error."
+  },
+
+
+
   "donate": {
     "en": "<b>Donate me:</b>\n<a href=\"https://qiwi.com/n/M4XX1M\">QIWI</a>\nSBERBANK: <code>88005553535</code>\nOr write <a href=\"https://t.me/m4xx1m\">me</a>"
   },
