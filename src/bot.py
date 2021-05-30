@@ -215,7 +215,6 @@ async def update_animation(anim_message: types.Message, anim_cf):
     )
     if anim_message.text != _txt:
         await anim_message.edit_text(_txt)
-        log.info('UPD')
 
 
 async def main():
