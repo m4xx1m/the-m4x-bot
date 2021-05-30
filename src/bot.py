@@ -1,15 +1,13 @@
+import asyncio
 import io
 import json
-import os
-import sys
-from utils import DataBase, Distorting, AdminFilter, AnswerCompiler
-from utils.bot import check_user, format_all_commands
-import aiogram
-import asyncio
-from datetime import datetime
 import logging
-import sqlite3
+from datetime import datetime
+
 from aiogram import Bot, Dispatcher, types, executor
+
+from utils import DataBase, Distorting, AdminFilter, BotUtils
+from utils.bot import format_all_commands
 
 logging.basicConfig(
     format='[%(levelname)s][%(funcName)s][%(asctime)s] %(message)s',
@@ -30,13 +28,15 @@ db = DataBase(config['dbName'], lang_cfgs=langs)
 bot.parse_mode = "html"
 bot.format_langs = langs
 bot.bot_admins = db.get_admins()
-answer_compiler = AnswerCompiler(user_langs=db.get_user_langs(), format_langs=langs)
+bot_utils = BotUtils(user_langs=db.get_user_langs(), format_langs=langs, db=db)
+compile_awl = bot_utils.compile_awl
+check_user = bot_utils.check_user
 
 
-def reg_handlers():  # TODO: categorize handlers
+def reg_handlers():
     @dp.message_handler(commands=['test'], is_admin=True)
     async def tester(message: types.Message):
-        await message.reply(answer_compiler.compile_awl(message.from_user.id, 'setlang'))
+        await message.reply((await bot.get_me())['username'])
 
     @dp.message_handler(commands=['start'], chat_type='private')
     async def starter(message: types.Message):
@@ -55,17 +55,12 @@ def reg_handlers():  # TODO: categorize handlers
 
     @dp.message_handler(commands=['help'])
     async def answer_help(message: types.Message):
-        await message.reply(answer_compiler.compile_awl(message.from_user.id, 'help',
-                                                        all_commands=format_all_commands(
-                                                            all_commands=langs['all_commands'],
-                                                            lang_code=db.get_lang(message.from_user.id)
-                                                        )))
-
-    @dp.message_handler(commands=['upLangs'], is_admin=False)
-    async def upLangs(message: types.Message):
-        langs.format_langs = json.load(open("configs/langs.json", encoding='utf-8'))
-        langs.user_langs = db.get_user_langs()
-        await message.reply('True')
+        check_user(message.from_user)
+        await message.reply(compile_awl(message.from_user.id, 'help',
+                                        all_commands=format_all_commands(
+                                            all_commands=langs['all_commands'],
+                                            lang_code=db.get_lang(message.from_user.id)
+                                        )))
 
     @dp.message_handler(commands=['addadmin'], is_admin=True)
     async def addadmin(message: types.Message):
@@ -87,7 +82,14 @@ def reg_handlers():  # TODO: categorize handlers
 
     @dp.message_handler(commands=['getadmins'], is_admin=True)
     async def getadmins(message: types.Message):
-        await message.reply(str(db.get_admins()))  # TODO: make beauty answer
+        await message.reply(
+            text=compile_awl(
+                uid=message.from_user.id,
+                text='all_admins',
+                bot_name=(await bot.get_me())['username'],
+                admins='\n'.join([f'<a href="tg://user?id={uid}">{db.get_user(uid)["fname"]}</a>: {uid}' for uid in db.get_admins()])
+            )
+        )
 
     @dp.message_handler(commands=['deladmin'], is_admin=True)
     async def getadmins(message: types.Message):
@@ -107,20 +109,19 @@ def reg_handlers():  # TODO: categorize handlers
     async def run_bd_updates(message: types.Message):
         await message.reply(str(db.run_updates()))
 
-    @dp.message_handler(commands=['setlang'], is_admin=True)
+    @dp.message_handler(commands=['setlang'])
     async def user_set_lang(message: types.Message):
         arg = message.get_args().split()[0]
 
         if arg not in langs['all_langs']:
-            await message.reply(
-                answer_compiler.compile_awl(message.from_user.id, 'unknown_lang'))
+            await message.reply(compile_awl(message.from_user.id, 'unknown_lang'))
             return
 
         if db.upd_user(uid=message.from_user.id, lang=arg):
-            await message.reply(answer_compiler.compile_awl(message.from_user.id, 'successfully'))
+            await message.reply(compile_awl(message.from_user.id, 'successfully'))
             return
         else:
-            await message.reply('false')  # TODO: add answer
+            await message.reply(compile_awl(message.from_user.id, 'error_setting_lang'))
             return
 
     @dp.message_handler(commands=['p', 'ping'], is_admin=True)
@@ -144,30 +145,24 @@ def reg_handlers():  # TODO: categorize handlers
 
     @dp.message_handler(commands=['donate'])
     async def donate(message: types.Message):
-        await message.reply(answer_compiler.compile_awl(message.from_user.id, 'donate'))
+        check_user(message.from_user)
+        await message.reply(compile_awl(message.from_user.id, 'donate'), disable_web_page_preview=True)
 
-    @dp.message_handler(commands=['setuser'], is_admin=True)  # TODO: add to useless
-    async def setuser(message: types.Message):
-        try:
-            args = eval(message.get_args())
-        except Exception as err:
-            await message.reply(str(err))
-            return
-
-        if not isinstance(args, dict):
-            return
-
-        await message.reply(db.upd_user(**args))
+    @dp.message_handler(commands=['contact'])
+    async def contact(message: types.Message):
+        check_user(message.from_user)
+        await message.reply('\n'.join([f'<a href="tg://user?id={uid}">{name}</a>' for name, uid in config['authors'].items()]))
 
     @dp.message_handler(commands=['distort'])
     async def distort(message: types.Message):
+        check_user(message.from_user)
         reply = message.reply_to_message
 
         if not reply:
-            await message.reply('noreply')  # TODO: make beauty answer
+            await message.reply(compile_awl(message.from_user.id, 'no_reply'))
             return
         if not reply.sticker or not reply.sticker.is_animated:
-            await message.reply('no stick')  # TODO: make beauty answer
+            await message.reply(compile_awl(message.from_user.id, 'not_animated'))
             return
 
         file = io.BytesIO()
@@ -197,16 +192,18 @@ def reg_handlers():  # TODO: categorize handlers
                 if not ms.sticker:
                     await ms.delete()
                     anim_configs[num] = 'Failed'
-                    await update_animation(anim_message, anim_configs)
+                    # await update_animation(anim_message, anim_configs)
                     continue
                 anim_configs[num] = 'Done'
-                await update_animation(anim_message, anim_configs)
+                # await update_animation(anim_message, anim_configs)
             else:
                 anim_configs[num] = 'ERROR'
-                await update_animation(anim_message, anim_configs)
+                # await update_animation(anim_message, anim_configs)
 
+        await update_animation(anim_message, anim_configs)
         await asyncio.sleep(3)
-        # await anim_message.delete()
+        await anim_message.delete()
+        db.plus_pdc(message.from_user.id)
 
 
 async def update_animation(anim_message: types.Message, anim_cf):
@@ -227,6 +224,6 @@ async def main():
 
 
 if __name__ == '__main__':
-    db.run_updates(timeout=5)  # TODO: not forget to change timeout aahahah
+    db.run_updates(timeout=600)  # seconds # TODO: not forget to change timeout aahahah
     loop.run_until_complete(main())
     executor.start_polling(dp, skip_updates=True)

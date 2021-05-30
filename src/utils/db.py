@@ -101,28 +101,25 @@ class DataBase:
             _user_langs[row[0]] = row[1]
         return _user_langs
 
-    @staticmethod
-    def to_dict(user: tuple) -> dict:
-        return {
-            "date": user[0],
-            "uid": user[1],
-            "fname": user[2],
-            "username": user[3],
-            "distort_count": user[4],
-            "limit": user[5],
-            "lang": user[6]
-        }
-
     def get_user(self, uid: int, to_dict=True):
         cur = self.con.cursor()
         user = cur.execute('select * from users where uid=:uid limit 1', {"uid": uid}).fetchall()
         if len(user) < 1:
             return None
         cur.close()
+        user = user[0]
         if to_dict:
-            return self.to_dict(user[0])
+            return {
+                "date": user[0],
+                "uid": user[1],
+                "fname": user[2],
+                "username": user[3],
+                "distort_count": user[4],
+                "limit": user[5],
+                "lang": user[6]
+            }
         else:
-            return user[0]
+            return user
 
     def get_date(self, uid):
         return self.get_user(uid)['date']
@@ -163,6 +160,9 @@ class DataBase:
         cur = self.con.cursor()
         admins = cur.execute('select uid from admins').fetchall()
         return [admin[0] for admin in admins]
+
+    def plus_pdc(self, uid):
+        return self.upd_user(uid, distort_count=self.get_user(uid)['distort_count']+1)
 
     def run_updates(self, timeout: int = 5):
         if not self.upd_task or self.upd_task.cancelled():

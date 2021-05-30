@@ -10,14 +10,14 @@
     "en": {
       "start": "Start bot",
       "help":  "Get help",
-      "distiort": "Distort replied sticker",
+      "distort": "Distort replied sticker",
       "donate": "Help me survive in Russia :3",
       "contact": "Write to author"
     },
     "ru": {
       "start": "Запуск бота",
       "help":  "Получить помощь",
-      "distiort": "Дисторт реплайнутого (ответ на сообщение) стикера",
+      "distort": "Дисторт реплайнутого (ответ на сообщение) стикера",
       "donate": "Помоги мне дожить до того, как я найду работу",
       "contact": "Связь с автором"
     }
@@ -37,7 +37,7 @@
 
   "no_reply": {
     "en": "No reply message",
-    "ru": "Нет ответа на стикер, с чем мне работать?"
+    "ru": "Нет ответа на стикер"
   },
 
   "unknown_lang": {
@@ -55,11 +55,9 @@
     "ru": "При смене языка произошла ошибка."
   },
 
-
-
   "donate": {
-    "en": "<b>Donate me:</b>\n<a href=\"https://qiwi.com/n/M4XX1M\">QIWI</a>\nSBERBANK: <code>88005553535</code>\nOr write <a href=\"https://t.me/m4xx1m\">me</a>",
-    "ru": "<b>Помочь выжить в России:</b>\n<a href=\"https://qiwi.com/n/M4XX1M\">QIWI</a>\nSBERBANK: <code>88005553535</code>\nИли напишите: <a href=\"https://t.me/m4xx1m\">в лс</a>"
+    "en": "<b>Donate me:</b>\n<a href=\"https://qiwi.com/n/M4XX1M\">QIWI</a>\nOr write <a href=\"https://t.me/m4xx1m\">me</a>",
+    "ru": "<b>Помочь выжить в России:</b>\n<a href=\"https://qiwi.com/n/M4XX1M\">QIWI</a>\nИли напиши мне: <a href=\"https://t.me/m4xx1m\">в лс</a>"
   },
 
   "help": {

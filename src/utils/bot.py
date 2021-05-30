@@ -9,10 +9,11 @@ log = logging.getLogger('stickdistortbot_logger')
 log.level = logging.INFO
 
 
-class AnswerCompiler:
-    def __init__(self, user_langs, format_langs):
+class BotUtils:
+    def __init__(self, user_langs, format_langs, db: DataBase):
         self.user_langs = user_langs
         self.format_langs = format_langs
+        self.db = db
 
     def compile_awl(  # Answer With Lang
             self,
@@ -24,8 +25,7 @@ class AnswerCompiler:
     ):
         """Compiling text for answer"""
         if uid not in self.user_langs.keys():
-            with DataBase(dbname=json.load(open("configs/botconfig.json", encoding='utf-8'))['dbName']) as db:
-                self.user_langs = db.get_user_langs()
+            self.user_langs = self.db.get_user_langs()
 
         if not self.format_langs:
             self.format_langs = json.load(open("configs/langs.json", encoding='utf-8'))
@@ -44,20 +44,16 @@ class AnswerCompiler:
             **kwargs
         )
 
-
-def check_user(message: aiogram.types.Message, db: DataBase):
-    if not db.get_user(message.from_user.id):
-        db.new_user(
-            date=str(datetime.utcnow()).split('.')[0],
-            uid=message.from_user.id,
-            fname=message.from_user.first_name,
-            username=str(message.from_user.username),
-        )
+    def check_user(self, user):
+        if not self.db.get_user(user.id):
+            self.db.new_user(
+                date=str(datetime.utcnow()).split('.')[0],
+                uid=user.id,
+                fname=user.first_name,
+                username=str(user.username),
+            )
 
 
 def format_all_commands(all_commands: dict, lang_code) -> str:
     return '\n'.join([f'/{key}: {value}' for key, value in all_commands[lang_code].items()])
 
-
-def update_langs(db: DataBase):
-    return db.get_user_langs()
