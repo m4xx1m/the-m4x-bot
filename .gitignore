@@ -2,5 +2,4 @@
 /src/sqt.py
 *.db*
 *.idea*
-/src/utils/filters.py
 *.tgs
