@@ -13,6 +13,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.types import *
 import typing
 
+import keyboards
 from utils import DataBase, Distorting, AdminFilter, BotUtils
 from utils.bot import format_all_commands
 
@@ -43,30 +44,25 @@ check_user = bot_utils.check_user
 def reg_handlers():
     @dp.message_handler(commands=['settings'], is_admin=True)
     async def tester(message: types.Message):
-        keyboard_markup = types.InlineKeyboardMarkup(row_width=3)
-
-        text_and_data = (
-            ('Distort without command | on', f'set|distort_without_command|True'),
-            ('Distort without command | off', f'set|distort_without_command|False'),
-        )
-
-        row_btns = (types.InlineKeyboardButton(text, callback_data=data) for text, data in text_and_data)
-
-        keyboard_markup.row(*row_btns)
-
-        await message.reply("Bot settings", reply_markup=keyboard_markup)
+        await message.reply("Bot settings", reply_markup=keyboards.menu(**db.get_settings(message.from_user.id)))
 
     @dp.callback_query_handler()
     async def inliner(query: types.CallbackQuery):
         answer_data = query.data
         _data = answer_data.split('|')
         command = _data[0]
-        param = _data[1]
-        arg = True if _data[2] == 'True' else False
+        from_user = int(_data[1])
+        param = _data[2]
+        arg = eval(_data[3])
+
+        if from_user != query.from_user.id:
+            await query.answer('.__.')
+            return
 
         if command == 'set':
-            db.upd_user_settings(query.from_user.id, **{param: bool(arg)})
+            db.upd_user_settings(query.from_user.id, **{param: arg})
             await query.answer('Done!')
+            await query.message.edit_reply_markup(reply_markup=keyboards.menu(**db.get_settings(query.from_user.id)))
 
     @dp.inline_handler()
     async def inline_echo(inline_query: InlineQuery):
