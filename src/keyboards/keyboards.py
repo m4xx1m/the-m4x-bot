@@ -24,7 +24,7 @@ def menu(
         (                                                                                   # row 1
             (
                 f'Distort without command | {"ON" if distort_without_command else "OFF"}',  # button test
-                f'set|{uid}|distort_without_command|{not distort_without_command}'                # button data
+                f'set|{uid}|distort_without_command|{not distort_without_command}'          # button data
             ),
         ),
 
@@ -58,7 +58,14 @@ def menu(
                 '-',
                 f'set|{uid}|delete_distort_status_timeout|{delete_distort_status_timeout - 1}'
             )
-        )
+        ),
+
+        (
+            (
+                'Close',
+                f'close|{uid}|None|None'
+            ),
+        ),
     ]
 
     keyboard_markup = types.InlineKeyboardMarkup()

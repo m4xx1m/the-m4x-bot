@@ -49,6 +49,7 @@ def reg_handlers():
     @dp.callback_query_handler()
     async def inliner(query: types.CallbackQuery):
         answer_data = query.data
+        _last_reply_markup = None
         _data = answer_data.split('|')
         command = _data[0]
         from_user = int(_data[1])
@@ -61,8 +62,22 @@ def reg_handlers():
 
         if command == 'set':
             db.upd_user_settings(query.from_user.id, **{param: arg})
-            await query.answer('Done!')
-            await query.message.edit_reply_markup(reply_markup=keyboards.menu(**db.get_settings(query.from_user.id)))
+            # await query.answer('Done!')
+            reply_markup = keyboards.menu(**db.get_settings(query.from_user.id))
+            if reply_markup != _last_reply_markup:
+                try:
+                    await query.message.edit_reply_markup(reply_markup=reply_markup)
+                except:
+                    pass
+                finally:
+                    _last_reply_markup = reply_markup
+                return
+            else:
+                return
+
+        elif command == 'close':
+            await query.message.delete()
+            return
 
     @dp.inline_handler()
     async def inline_echo(inline_query: InlineQuery):
@@ -156,7 +171,9 @@ def reg_handlers():
                 uid=message.from_user.id,
                 text='all_admins',
                 bot_name=(await bot.get_me())['username'],
-                admins='\n'.join([f'<a href="tg://user?id={uid}">{db.get_user(uid)["fname"]}</a>: {uid}' for uid in db.get_admins() if db.get_user(uid)])
+                admins='\n'.join(
+                    [f'<a href="tg://user?id={uid}">{db.get_user(uid)["fname"]}</a>: {uid}' for uid in db.get_admins()
+                     if db.get_user(uid)])
             )
         )
 
@@ -224,7 +241,8 @@ def reg_handlers():
     @dp.message_handler(commands=['contact'])
     async def contact(message: types.Message):
         check_user(message.from_user)
-        await message.reply('\n'.join([f'<a href="tg://user?id={uid}">{name}</a>' for name, uid in config['authors'].items()]))
+        await message.reply(
+            '\n'.join([f'<a href="tg://user?id={uid}">{name}</a>' for name, uid in config['authors'].items()]))
 
     @dp.message_handler(commands=['distort'])
     async def distort(message: types.Message):
@@ -274,7 +292,8 @@ def reg_handlers():
                 # await update_animation(anim_message, anim_configs)
 
         await update_animation(anim_message, anim_configs)
-        if len([state for state in anim_configs.values() if state == 'Failed' or state == 'ERROR']) == len(config['distort_configs']):
+        if len([state for state in anim_configs.values() if state == 'Failed' or state == 'ERROR']) == len(
+                config['distort_configs']):
             return
         await asyncio.sleep(3)
         await anim_message.delete()

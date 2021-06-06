@@ -150,7 +150,6 @@ class DataBase:
         cur = self.con.cursor()
 
         if not distort_without_command and not isinstance(distort_without_command, bool):
-            print('a')
             if _user_sets:
                 distort_without_command = _user_sets['distort_without_command']
             else:
