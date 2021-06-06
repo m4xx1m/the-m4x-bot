@@ -1,10 +1,17 @@
 import asyncio
+import hashlib
 import io
 import json
 import logging
+import sys
+import traceback
 from datetime import datetime
+from meval import meval
 
 from aiogram import Bot, Dispatcher, types, executor
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import *
+import typing
 
 from utils import DataBase, Distorting, AdminFilter, BotUtils
 from utils.bot import format_all_commands
@@ -24,7 +31,7 @@ langs = json.load(open("configs/langs.json", encoding='utf-8'))
 bot = Bot(token=config['bot_token'])
 dp = Dispatcher(bot)
 dp.filters_factory.bind(AdminFilter)
-db = DataBase(config['dbName'], lang_cfgs=langs)
+db = DataBase(config['dbName'], lang_cfgs=langs, bot_config=config)
 bot.parse_mode = "html"
 bot.format_langs = langs
 bot.bot_admins = db.get_admins()
@@ -34,9 +41,72 @@ check_user = bot_utils.check_user
 
 
 def reg_handlers():
-    @dp.message_handler(commands=['test'], is_admin=True)
+    @dp.message_handler(commands=['settings'], is_admin=True)
     async def tester(message: types.Message):
-        await message.reply((await bot.get_me())['username'])
+        keyboard_markup = types.InlineKeyboardMarkup(row_width=3)
+
+        text_and_data = (
+            ('Distort without command | on', f'set|distort_without_command|True'),
+            ('Distort without command | off', f'set|distort_without_command|False'),
+        )
+
+        row_btns = (types.InlineKeyboardButton(text, callback_data=data) for text, data in text_and_data)
+
+        keyboard_markup.row(*row_btns)
+
+        await message.reply("Bot settings", reply_markup=keyboard_markup)
+
+    @dp.callback_query_handler()
+    async def inliner(query: types.CallbackQuery):
+        answer_data = query.data
+        _data = answer_data.split('|')
+        command = _data[0]
+        param = _data[1]
+        arg = True if _data[2] == 'True' else False
+
+        if command == 'set':
+            db.upd_user_settings(query.from_user.id, **{param: bool(arg)})
+            await query.answer('Done!')
+
+    @dp.inline_handler()
+    async def inline_echo(inline_query: InlineQuery):
+        text = inline_query.query or 'echo'
+        input_content = InputTextMessageContent(text)
+        result_id: str = hashlib.md5(text.encode()).hexdigest()
+        item = InlineQueryResultArticle(
+            id=result_id,
+            title=f'Result {text!r}',
+            input_message_content=input_content,
+        )
+        # don't forget to set cache_time=1 for testing (default is 300s or 5m)
+        await bot.answer_inline_query(inline_query.id, results=[item], cache_time=1)
+
+    @dp.message_handler(commands=['eval', 'e'], is_admin=True)
+    async def evaler(message: types.Message):
+        try:
+            allgl = globals()
+            allgl.update({'reply': message.reply_to_message})
+            allgl.update(locals())
+            await message.reply(await meval(message.get_args(), allgl), parse_mode='')
+        except Exception as err:
+            try:
+                exc = sys.exc_info()
+                exc = "".join(traceback.format_exception(exc[0], exc[1], exc[2].tb_next.tb_next.tb_next))
+            except:
+                exc = err
+            await message.reply(f'Failed expression:\n{exc}')
+
+    @dp.message_handler(commands=['exec', 'ex'], is_admin=True)
+    async def evaler(message: types.Message):
+        try:
+            reply = message.reply_to_message
+            allgl = globals()
+            allgl.update(locals())
+            await meval(message.get_args(), allgl)
+        except Exception as err:
+            # exc = sys.exc_info()
+            # exc = "".join(traceback.format_exception(exc[0], exc[1], exc[2].tb_next.tb_next.tb_next))
+            await message.reply(f'Failed expression:\n{err}')
 
     @dp.message_handler(commands=['start'], chat_type='private')
     async def starter(message: types.Message):
@@ -76,6 +146,9 @@ def reg_handlers():
                 fname=db.get_fname(int(uid)),
                 username=db.get_username(int(uid))
             ))
+            dp.filters_factory.unbind(AdminFilter)
+            dp.filters_factory.bind(AdminFilter)
+            reg_handlers()
             return
         else:
             await message.reply('Only integer')
@@ -87,7 +160,7 @@ def reg_handlers():
                 uid=message.from_user.id,
                 text='all_admins',
                 bot_name=(await bot.get_me())['username'],
-                admins='\n'.join([f'<a href="tg://user?id={uid}">{db.get_user(uid)["fname"]}</a>: {uid}' for uid in db.get_admins()])
+                admins='\n'.join([f'<a href="tg://user?id={uid}">{db.get_user(uid)["fname"]}</a>: {uid}' for uid in db.get_admins() if db.get_user(uid)])
             )
         )
 
@@ -100,6 +173,10 @@ def reg_handlers():
             return
 
         await message.reply(str(db.del_admin(uid=int(arg))))
+        dp.filters_factory.unbind(AdminFilter)
+
+        dp.filters_factory.bind(AdminFilter)
+        reg_handlers()
 
     @dp.message_handler(commands=['stop_bd_updates'], is_admin=True)
     async def stop_bd_updates(message: types.Message):
@@ -201,6 +278,8 @@ def reg_handlers():
                 # await update_animation(anim_message, anim_configs)
 
         await update_animation(anim_message, anim_configs)
+        if len([state for state in anim_configs.values() if state == 'Failed' or state == 'ERROR']) == len(config['distort_configs']):
+            return
         await asyncio.sleep(3)
         await anim_message.delete()
         db.plus_pdc(message.from_user.id)
@@ -224,6 +303,6 @@ async def main():
 
 
 if __name__ == '__main__':
-    db.run_updates(timeout=600)  # seconds # TODO: not forget to change timeout aahahah
+    db.run_updates(timeout=5)  # seconds # TODO: not forget to change timeout aahahah
     loop.run_until_complete(main())
     executor.start_polling(dp, skip_updates=True)

@@ -66,4 +66,4 @@ async def Distorting(input_file: bytes, configs: list):
         if distorted:
             yield _num, distorted
         else:
-            yield False
+            yield None, None
