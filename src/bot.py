@@ -223,11 +223,11 @@ def reg_handlers():
         await message.reply(
             '\n'.join([f'<a href="tg://user?id={uid}">{name}</a>' for name, uid in config['authors'].items()]))
 
-    @dp.message_handler()
-    async def distort_without_command_handler(message: types.Message):
-        check_user(message.from_user)
-        if message.chat.id:
-            pass
+    # @dp.message_handler()
+    # async def distort_without_command_handler(message: types.Message):
+    #     check_user(message.from_user)
+    #     if message.chat.id:
+    #         pass
 
     @dp.message_handler(commands=['distort'])
     async def distort(message: types.Message):
