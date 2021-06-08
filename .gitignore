@@ -1,5 +1,7 @@
-/src/configs/botconfig.json
-/src/sqt.py
+botconfig.json
+sqt.py
 *.db*
 *.idea*
+*.vscode*
 *.tgs
+log.txt

@@ -17,7 +17,10 @@ import keyboards
 from utils import DataBase, Distorting, AdminFilter, BotUtils
 from utils.bot import format_all_commands
 
+file_log = logging.FileHandler('log.txt')
+console_out = logging.StreamHandler()
 logging.basicConfig(
+    handlers=(file_log, console_out),
     format='[%(levelname)s][%(funcName)s][%(asctime)s] %(message)s',
     level=logging.INFO,
 )
