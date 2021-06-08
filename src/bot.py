@@ -215,6 +215,12 @@ def reg_handlers():
 
         await message.reply(db.upd_user(uid=int(args[0]), limit=int(args[1])))
 
+    @dp.message_handler(commands=['push_db'], is_admin=True)
+    async def db_pusher(message: types.Message):
+        db.con.commit()
+        logging.info('Force DB update')
+        await message.reply("True")
+
     @dp.message_handler(commands=['donate'])
     async def donate(message: types.Message):
         check_user(message.from_user)
@@ -306,6 +312,6 @@ async def main():
 
 
 if __name__ == '__main__':
-    db.run_updates(timeout=5)  # seconds # TODO: not forget to change timeout aahahah
+    db.run_updates(timeout=120)  # seconds # TODO: not forget to change timeout aahahah
     loop.run_until_complete(main())
     executor.start_polling(dp, skip_updates=True)
