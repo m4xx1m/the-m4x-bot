@@ -94,7 +94,7 @@ class DataBase:
         )
 
     def upd_user(self, uid: int, date: str = None, fname: str = None, username: str = None, distort_count: int = None,
-                 limit: int = None, lang: str = None):
+                 limit: int = None, lang: str = None, type: str=None):
         userinfo = self.get_user(uid)
         if not userinfo:
             return False
@@ -122,9 +122,10 @@ class DataBase:
             'distort_count=:distort_count, '
             '\'limit\'=:limit, '
             'lang=:lang '
+            '\'type\'=:type '
             'where uid=:uid',
             {'date': date, 'uid': uid, 'fname': fname, 'username': username, 'distort_count': distort_count,
-             'limit': limit, 'lang': lang}
+             'limit': limit, 'lang': lang, 'type': type}
         )
         cur.close()
         return True

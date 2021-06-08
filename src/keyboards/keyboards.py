@@ -13,6 +13,7 @@ def gen_kb(text_and_data):
 
 def menu(
         uid: int,
+        compile_awl,
         distort_without_command: bool,
         send_distort_status: bool,
         delete_distort_status: bool,
@@ -23,14 +24,14 @@ def menu(
     rows = [
         (                                                                                   # row 1
             (
-                f'Distort without command | {"ON" if distort_without_command else "OFF"}',  # button test
+                f'{compile_awl(uid, "distort_without_command_settings")} | {"✅" if distort_without_command else "❌"}',  # button test
                 f'set|{uid}|distort_without_command|{not distort_without_command}'          # button data
             ),
         ),
 
         (                                                                                   # row 2
             (
-                f'Send distort status | {"ON" if send_distort_status else "OFF"}',
+                f'{compile_awl(uid, "send_distort_status_settings")} | {"✅" if send_distort_status else "❌"}',
                 f'set|{uid}|send_distort_status|{not send_distort_status}'
             ),
 
@@ -38,14 +39,14 @@ def menu(
 
         (
             (
-                f'Delete distort status | {"ON" if delete_distort_status else "OFF"}',
+                f'{compile_awl(uid, "delete_distort_status_settings")} | {"✅" if delete_distort_status else "❌"}',
                 f'set|{uid}|delete_distort_status|{not delete_distort_status}'
             ),
         ),
 
         (
             (
-                f'Delete distort status timeout | {delete_distort_status_timeout}',
+                f'{compile_awl(uid, "delete_distort_status_timeout_settings")} | {delete_distort_status_timeout}',
                 f'set|{uid}|delete_distort_status_timeout|None'
             ),
         ),
@@ -62,7 +63,7 @@ def menu(
 
         (
             (
-                'Close',
+                f'{compile_awl(uid, "close_settings")}',
                 f'close|{uid}|None|None'
             ),
         ),

@@ -42,14 +42,17 @@ check_user = bot_utils.check_user
 
 
 def reg_handlers():
-    @dp.message_handler(commands=['settings'], is_admin=True)
+    @dp.message_handler(commands=['test', 't'])
     async def tester(message: types.Message):
-        await message.reply("Bot settings", reply_markup=keyboards.menu(**db.get_settings(message.from_user.id)))
+        await message.answer('qq')
+
+    @dp.message_handler(commands=['settings'], is_admin=True)
+    async def setter(message: types.Message):
+        await message.reply("Bot settings", reply_markup=keyboards.menu(compile_awl=compile_awl, **db.get_settings(message.from_user.id)))
 
     @dp.callback_query_handler()
     async def inliner(query: types.CallbackQuery):
         answer_data = query.data
-        _last_reply_markup = None
         _data = answer_data.split('|')
         command = _data[0]
         from_user = int(_data[1])
@@ -63,42 +66,26 @@ def reg_handlers():
         if command == 'set':
             db.upd_user_settings(query.from_user.id, **{param: arg})
             # await query.answer('Done!')
-            reply_markup = keyboards.menu(**db.get_settings(query.from_user.id))
-            if reply_markup != _last_reply_markup:
-                try:
-                    await query.message.edit_reply_markup(reply_markup=reply_markup)
-                except:
-                    pass
-                finally:
-                    _last_reply_markup = reply_markup
-                return
-            else:
-                return
+            reply_markup = keyboards.menu(compile_awl=compile_awl, **db.get_settings(query.from_user.id))
+            try:
+                await query.message.edit_reply_markup(reply_markup=reply_markup)
+            except:
+                pass
+            return
 
         elif command == 'close':
             await query.message.delete()
             return
 
-    @dp.inline_handler()
-    async def inline_echo(inline_query: InlineQuery):
-        text = inline_query.query or 'echo'
-        input_content = InputTextMessageContent(text)
-        result_id: str = hashlib.md5(text.encode()).hexdigest()
-        item = InlineQueryResultArticle(
-            id=result_id,
-            title=f'Result {text!r}',
-            input_message_content=input_content,
-        )
-        # don't forget to set cache_time=1 for testing (default is 300s or 5m)
-        await bot.answer_inline_query(inline_query.id, results=[item], cache_time=1)
-
     @dp.message_handler(commands=['eval', 'e'], is_admin=True)
-    async def evaler(message: types.Message):
+    async def evaler(message: types.Message, is_exec=False):
         try:
-            allgl = globals()
-            allgl.update({'reply': message.reply_to_message})
-            allgl.update(locals())
-            await message.reply(await meval(message.get_args(), allgl), parse_mode='')
+            _allgl = globals()
+            _allgl.update({'reply': message.reply_to_message})
+            _allgl.update(locals())
+            repl = message.reply('\u2060' + str(await meval(message.get_args(), _allgl)), parse_mode='')
+            if not is_exec:
+                await repl
         except Exception as err:
             try:
                 exc = sys.exc_info()
@@ -108,16 +95,8 @@ def reg_handlers():
             await message.reply(f'Failed expression:\n{exc}')
 
     @dp.message_handler(commands=['exec', 'ex'], is_admin=True)
-    async def evaler(message: types.Message):
-        try:
-            reply = message.reply_to_message
-            allgl = globals()
-            allgl.update(locals())
-            await meval(message.get_args(), allgl)
-        except Exception as err:
-            # exc = sys.exc_info()
-            # exc = "".join(traceback.format_exception(exc[0], exc[1], exc[2].tb_next.tb_next.tb_next))
-            await message.reply(f'Failed expression:\n{err}')
+    async def execute(message: types.Message):
+        await evaler(message, is_exec=True)
 
     @dp.message_handler(commands=['start'], chat_type='private')
     async def starter(message: types.Message):
@@ -243,6 +222,12 @@ def reg_handlers():
         check_user(message.from_user)
         await message.reply(
             '\n'.join([f'<a href="tg://user?id={uid}">{name}</a>' for name, uid in config['authors'].items()]))
+
+    @dp.message_handler()
+    async def distort_without_command_handler(message: types.Message):
+        check_user(message.from_user)
+        if message.chat.id:
+            pass
 
     @dp.message_handler(commands=['distort'])
     async def distort(message: types.Message):

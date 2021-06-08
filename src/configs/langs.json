@@ -72,5 +72,26 @@
 
   "state": {
     "en": "<b>Config {cf_num}: {state}</b>"
+  },
+
+  "distort_without_command_settings":{
+    "en": "Distort without command"
+  },
+
+  "send_distort_status_settings": {
+    "en": "Send distort status"
+  },
+
+  "delete_distort_status_settings": {
+    "en": "Delete distort status"
+  },
+
+  "delete_distort_status_timeout_settings": {
+    "en": "Delete distort status timeout"
+  },
+
+  "close_settings": {
+    "en": "Close"
   }
+
 }
