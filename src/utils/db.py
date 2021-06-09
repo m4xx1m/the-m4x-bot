@@ -94,7 +94,7 @@ class DataBase:
         )
 
     def upd_user(self, uid: int, date: str = None, fname: str = None, username: str = None, distort_count: int = None,
-                 limit: int = None, lang: str = None, type: str=None):
+                 limit: int = None, lang: str = None, chat_type: str = None):
         userinfo = self.get_user(uid)
         if not userinfo:
             return False
@@ -112,6 +112,8 @@ class DataBase:
             limit = userinfo['limit']
         if not lang:
             lang = userinfo['lang']
+        if not chat_type:
+            chat_type = userinfo['chat_type']
 
         cur.execute(
             'update users set '
@@ -121,11 +123,11 @@ class DataBase:
             'username=:username, '
             'distort_count=:distort_count, '
             '\'limit\'=:limit, '
-            'lang=:lang '
-            '\'type\'=:type '
+            'lang=:lang, '
+            'chat_type=:chat_type '
             'where uid=:uid',
             {'date': date, 'uid': uid, 'fname': fname, 'username': username, 'distort_count': distort_count,
-             'limit': limit, 'lang': lang, 'type': type}
+             'limit': limit, 'lang': lang, 'chat_type': chat_type}
         )
         cur.close()
         return True
@@ -237,8 +239,7 @@ class DataBase:
         if len(user) < 1:
             return None
         cur.close()
-        user = user[0]
-        return user
+        return user[0]
 
     def get_date(self, uid):
         return self.get_user(uid)['date']

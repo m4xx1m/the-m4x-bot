@@ -51,7 +51,8 @@ def reg_handlers():
 
     @dp.message_handler(commands=['settings'], is_admin=True)
     async def setter(message: types.Message):
-        await message.reply("Bot settings", reply_markup=keyboards.menu(compile_awl=compile_awl, **db.get_settings(message.from_user.id)))
+        await message.reply("Bot settings", reply_markup=keyboards.menu(compile_awl=compile_awl,
+                                                                        **db.get_settings(message.from_user.id)))
 
     @dp.callback_query_handler()
     async def inliner(query: types.CallbackQuery):
@@ -207,7 +208,6 @@ def reg_handlers():
     @dp.message_handler(commands=['setlimit'], is_admin=True)
     async def setlimit(message: types.Message):
         args = message.get_args().replace('me', message.from_user.id).split()[0:1]
-
         for arg in args:
             if not arg.isdigit():
                 await message.reply('Only integer')
