@@ -1,3 +1,4 @@
+import typing
 import asyncio
 import sqlite3
 import logging
@@ -289,9 +290,11 @@ class DataBase:
     def plus_dc(self, uid):
         return self.upd_user(uid, distort_count=self.get_user(uid)['distort_count'] + 1)
 
-    def ex(self, code):
+    def ex(self, code, parameters=None):
+        if parameters is None:
+            parameters = {}
         cur = self.con.cursor()
-        _out = cur.execute(code).fetchall()
+        _out = cur.execute(code, parameters).fetchall()
         cur.close()
         return _out
 
