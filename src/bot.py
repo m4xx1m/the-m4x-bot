@@ -1,28 +1,22 @@
-import asyncio
-import hashlib
 import io
 import json
-import logging
 import sys
-import traceback
-from datetime import datetime
-from meval import meval
-
-from aiogram import Bot, Dispatcher, types, executor
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-from aiogram.types import *
-import typing
-
+import asyncio
+import logging
 import keyboards
-from utils import DataBase, Distorting, AdminFilter, BotUtils
+import traceback
+from meval import meval
+from datetime import datetime
 from utils.bot import format_all_commands
+from aiogram import Bot, Dispatcher, types, executor
+from utils import DataBase, Distorting, AdminFilter, BotUtils
 
 file_log = logging.FileHandler('log.txt')
 console_out = logging.StreamHandler()
 logging.basicConfig(
-    handlers=(file_log, console_out),
     format='[%(levelname)s][%(funcName)s][%(asctime)s] %(message)s',
     level=logging.INFO,
+    handlers=(file_log, console_out)
 )
 
 log = logging.getLogger('stickdistortbot_logger')
