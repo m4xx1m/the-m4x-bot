@@ -163,6 +163,7 @@ def reg_handlers():
 
     @dp.message_handler(commands=['getstat'], is_admin=True)
     async def stater(message: types.Message):
+        ms = await message.reply('<b>Loading...</b>')
         all_users = len(db.get_all_users())
         top_3_users = '\n'.join(
             [f'<a href="tg://user?id={user["uid"]}">{user["fname"]}</a>{(" [@" + user["username"] + "] ") if user["username"] != "None" else ""}: {user["distort_count"]}'
@@ -170,7 +171,7 @@ def reg_handlers():
         )
         total_usages = sum([dct["distort_count"] for dct in db.ex('select distort_count from users')])
 
-        await message.reply(f'<b>Users in bot: <code>{all_users}</code>\nTotal usages: <code>{total_usages}</code>\n\nTop-3 users:</b>\n{top_3_users}')
+        await ms.edit_text(f'<b>Users in bot: <code>{all_users}</code>\nTotal usages: <code>{total_usages}</code>\n\nTop-3 users:</b>\n{top_3_users}')
 
     @dp.message_handler(commands=['getadmins'], is_admin=True)
     async def getadmins(message: types.Message):
