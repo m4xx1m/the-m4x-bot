@@ -54,8 +54,11 @@ def reg_handlers():
         _data = answer_data.split('|')
         command = _data[0]
         from_user = int(_data[1])
-        param = _data[2]
-        arg = eval(_data[3])
+        if command not in ['close']:
+            param = _data[2]
+            arg = eval(_data[3])
+        else:
+            param, arg = None, None
 
         if from_user != query.from_user.id:
             await query.answer('.__.')
@@ -68,7 +71,7 @@ def reg_handlers():
             try:
                 await query.message.edit_reply_markup(reply_markup=reply_markup)
             except:
-                pass
+                return
             return
 
         elif command == 'close':
@@ -77,13 +80,30 @@ def reg_handlers():
 
     @dp.message_handler(commands=['eval', 'e'], is_admin=True)
     async def evaler(message: types.Message, is_exec=False):
+        _answ_txt = []
+        cmd = message.get_args()
         try:
             _allgl = globals()
             _allgl.update({'reply': message.reply_to_message})
             _allgl.update(locals())
-            repl = message.reply('\u2060' + str(await meval(message.get_args(), _allgl)), parse_mode='')
+
+            _executed = str(await meval(cmd, _allgl))
+
+            if not _executed:
+                _executed = 'None'
+
+            while len(_executed) > 4096:
+                _answ_txt.append(_executed[:4096])
+                _executed = _executed[4096:]
+            _answ_txt.append(_executed)
+
+            if len(_answ_txt) > config['max_msgs_in_eval']:
+                _answ_txt[config['max_msgs_in_eval']] = 'Messaeg too long'
+
             if not is_exec:
-                await repl
+                for txt in _answ_txt[:config['max_msgs_in_eval'] + 1]:
+                    await message.reply(txt, parse_mode='')
+
         except Exception as err:
             try:
                 exc = sys.exc_info()
@@ -140,6 +160,17 @@ def reg_handlers():
             return
         else:
             await message.reply('Only integer')
+
+    @dp.message_handler(commands=['getstat'], is_admin=True)
+    async def stater(message: types.Message):
+        all_users = len(db.get_all_users())
+        top_3_users = '\n'.join(
+            [f'<a href="tg://user?id={user["uid"]}">{user["fname"]}</a>{(" [@" + user["username"] + "] ") if user["username"] != "None" else ""}: {user["distort_count"]}'
+             for user in db.ex('select distort_count, uid, fname, username from users order by distort_count desc limit 3')]
+        )
+        total_usages = sum([dct["distort_count"] for dct in db.ex('select distort_count from users')])
+
+        await message.reply(f'<b>Users in bot: <code>{all_users}</code>\nTotal usages: <code>{total_usages}</code>\n\nTop-3 users:</b>\n{top_3_users}')
 
     @dp.message_handler(commands=['getadmins'], is_admin=True)
     async def getadmins(message: types.Message):
@@ -226,11 +257,11 @@ def reg_handlers():
         await message.reply(
             '\n'.join([f'<a href="tg://user?id={uid}">{name}</a>' for name, uid in config['authors'].items()]))
 
-    # @dp.message_handler()
-    # async def distort_without_command_handler(message: types.Message):
-    #     check_user(message.from_user)
-    #     if message.chat.id:
-    #         pass
+    @dp.message_handler(chat_type='private')
+    async def distort_without_command_handler(message: types.Message):
+        check_user(message.from_user)
+        if message.chat.id:
+            pass
 
     @dp.message_handler(commands=['distort'])
     async def distort(message: types.Message):
@@ -285,7 +316,7 @@ def reg_handlers():
             return
         await asyncio.sleep(3)
         await anim_message.delete()
-        db.plus_pdc(message.from_user.id)
+        db.plus_dc(message.from_user.id)
 
 
 async def update_animation(anim_message: types.Message, anim_cf):

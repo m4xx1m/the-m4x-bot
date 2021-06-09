@@ -64,7 +64,7 @@ def menu(
         (
             (
                 f'{compile_awl(uid, "close_settings")}',
-                f'close|{uid}|None|None'
+                f'close|{uid}'
             ),
         ),
     ]

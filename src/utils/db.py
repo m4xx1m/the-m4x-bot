@@ -134,8 +134,8 @@ class DataBase:
 
     def set_default_settings(self, uid):
         _upd_sets = {}
-        for set, param in self.bot_config['stock_settings'].items():
-            _upd_sets.update({set: param})
+        for setting, param in self.bot_config['stock_settings'].items():
+            _upd_sets.update({setting: param})
         return self.upd_user_settings(uid, **_upd_sets)
 
     def upd_user_settings(
@@ -286,8 +286,14 @@ class DataBase:
         cur.close()
         return [admin['uid'] for admin in admins]
 
-    def plus_pdc(self, uid):
+    def plus_dc(self, uid):
         return self.upd_user(uid, distort_count=self.get_user(uid)['distort_count'] + 1)
+
+    def ex(self, code):
+        cur = self.con.cursor()
+        _out = cur.execute(code).fetchall()
+        cur.close()
+        return _out
 
     def run_updates(self, timeout: int = 5):
         if not self.upd_task or self.upd_task.cancelled():
