@@ -11,6 +11,9 @@ from utils.bot import format_all_commands
 from aiogram import Bot, Dispatcher, types, executor
 from utils import DataBase, Distorting, AdminFilter, BotUtils
 
+with open("log.txt", "w") as log:
+    log.write("")
+
 file_log = logging.FileHandler('log.txt')
 console_out = logging.StreamHandler()
 logging.basicConfig(
