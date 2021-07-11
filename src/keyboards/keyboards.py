@@ -1,14 +1,4 @@
-from aiogram import Bot, Dispatcher, types, executor
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-from aiogram.types import *
-import typing
-
-
-def gen_kb(text_and_data):
-    keyboard_markup = types.InlineKeyboardMarkup(row_width=3)
-    row_btns = (types.InlineKeyboardButton(text, callback_data=data) for text, data in text_and_data)
-    keyboard_markup.row(*row_btns)
-    return keyboard_markup
+from aiogram import types
 
 
 def menu(
@@ -18,7 +8,6 @@ def menu(
         send_distort_status: bool,
         delete_distort_status: bool,
         delete_distort_status_timeout: int,
-        *args,
         **kwargs
 ):
     rows = [
@@ -76,5 +65,3 @@ def menu(
         keyboard_markup.row(*row_btns)
 
     return keyboard_markup
-
-

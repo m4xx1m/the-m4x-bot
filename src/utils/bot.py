@@ -2,8 +2,6 @@ import json
 import logging
 from datetime import datetime
 from .db import DataBase
-import aiogram
-from aiogram import types
 
 log = logging.getLogger('stickdistortbot_logger')
 log.level = logging.INFO
@@ -56,4 +54,3 @@ class BotUtils:
 
 def format_all_commands(all_commands: dict, lang_code) -> str:
     return '\n'.join([f'/{key}: {value}' for key, value in all_commands[lang_code].items()])
-

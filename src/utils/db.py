@@ -1,4 +1,3 @@
-import typing
 import asyncio
 import sqlite3
 import logging
@@ -289,6 +288,12 @@ class DataBase:
 
     def plus_dc(self, uid):
         return self.upd_user(uid, distort_count=self.get_user(uid)['distort_count'] + 1)
+
+    def get_handle_stickers_chats(self):
+        return [
+            chat['uid']
+            for chat in self.ex('select uid, distort_without_command from settings') if chat['distort_without_command']
+        ]
 
     def ex(self, code, parameters=None):
         if parameters is None:

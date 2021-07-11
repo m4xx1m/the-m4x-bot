@@ -1,7 +1,5 @@
-import json
 from aiogram.dispatcher.filters import BoundFilter
 from aiogram import types
-from .db import DataBase
 
 
 class AdminFilter(BoundFilter):

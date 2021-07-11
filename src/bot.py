@@ -11,11 +11,11 @@ from utils.bot import format_all_commands
 from aiogram import Bot, Dispatcher, types, executor
 from utils import DataBase, Distorting, AdminFilter, BotUtils
 
-with open("log.txt", "w") as log:
+with open("log.txt", "w") as log: # purge logs
     log.write("")
 
 file_log = logging.FileHandler('log.txt')
-console_out = logging.StreamHandler()
+console_out = logging.StreamHandler() # out in console
 logging.basicConfig(
     format='[%(levelname)s][%(funcName)s][%(asctime)s] %(message)s',
     level=logging.INFO,
@@ -31,14 +31,15 @@ langs = json.load(open("configs/langs.json", encoding='utf-8'))
 
 bot = Bot(token=config['bot_token'])
 dp = Dispatcher(bot)
-dp.filters_factory.bind(AdminFilter)
+dp.filters_factory.bind(AdminFilter) # is_admin= in dp.message_handler
 db = DataBase(config['dbName'], lang_cfgs=langs, bot_config=config)
+handle_stickers_chats = db.get_handle_stickers_chats()
 bot.parse_mode = "html"
 bot.format_langs = langs
 bot.bot_admins = db.get_admins()
 bot_utils = BotUtils(user_langs=db.get_user_langs(), format_langs=langs, db=db)
-compile_awl = bot_utils.compile_awl
-check_user = bot_utils.check_user
+compile_awl = bot_utils.compile_awl # alias
+check_user = bot_utils.check_user   # alias
 
 
 def reg_handlers():
@@ -57,7 +58,7 @@ def reg_handlers():
         _data = answer_data.split('|')
         command = _data[0]
         from_user = int(_data[1])
-        if command not in ['close']:
+        if command in ['set']:
             param = _data[2]
             arg = eval(_data[3])
         else:
@@ -95,13 +96,13 @@ def reg_handlers():
             if not _executed:
                 _executed = 'None'
 
-            while len(_executed) > 4096:
+            while len(_executed) > 4096:  # message limit 4096 characters
                 _answ_txt.append(_executed[:4096])
                 _executed = _executed[4096:]
             _answ_txt.append(_executed)
 
             if len(_answ_txt) > config['max_msgs_in_eval']:
-                _answ_txt[config['max_msgs_in_eval']] = 'Messaeg too long'
+                _answ_txt[config['max_msgs_in_eval']] = 'Message too long'
 
             if not is_exec:
                 for txt in _answ_txt[:config['max_msgs_in_eval'] + 1]:
@@ -267,11 +268,11 @@ def reg_handlers():
         await message.reply(
             '\n'.join([f'<a href="tg://user?id={uid}">{name}</a>' for name, uid in config['authors'].items()]))
 
-#    @dp.message_handler(chat_type='private')
-#    async def distort_without_command_handler(message: types.Message):
-#        check_user(message.from_user)
-#        if message.chat.id:
-#            pass
+    # @dp.message_handler(chat_type='private')
+    # async def distort_without_command_handler(message: types.Message):
+    #    check_user(message.from_user)
+    #    if message.chat.id:
+    #        pass
 
     @dp.message_handler(commands=['distort'])
     async def distort(message: types.Message):
