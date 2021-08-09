@@ -4,7 +4,7 @@ from lottie.exporters import exporters
 from lottie.importers import importers
 
 
-def tgs_to_json(input_file: bytes) -> str:
+def parse_tgs_to_json(input_file: bytes) -> str:
     infile = io.BytesIO(input_file)
 
     for p in importers:
@@ -19,7 +19,7 @@ def tgs_to_json(input_file: bytes) -> str:
     return outfile.getvalue()
 
 
-def json_to_tgs(input_file: str) -> bytes:
+def parse_json_to_tgs(input_file: str) -> bytes:
     infile = io.BytesIO(input_file.encode())
 
     for p in importers:
@@ -35,7 +35,7 @@ def json_to_tgs(input_file: str) -> bytes:
 
 
 async def distort(target: bytes, config: list):
-    distorted = tgs_to_json(target)
+    distorted = parse_tgs_to_json(target)
 
     for cf in config:
         distorted = distorted.replace(cf[0], cf[1])
@@ -43,7 +43,7 @@ async def distort(target: bytes, config: list):
     outFile = io.BytesIO()
     outFile.name = "distorted.tgs"
     try:
-        outFile.write(json_to_tgs(distorted))
+        outFile.write(parse_json_to_tgs(distorted))
     except:
         return None
     outFile.seek(0)
