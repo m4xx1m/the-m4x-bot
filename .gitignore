@@ -1,5 +1,6 @@
 botconfig.json
 sqt.py
+venv
 *.db*
 *.idea*
 *.vscode*
