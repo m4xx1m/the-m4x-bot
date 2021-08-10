@@ -1,8 +1,8 @@
 import json
 import asyncio
 from aiogram import Bot, Dispatcher, types
-from stickdistort.db import DataBase
-from stickdistort.logger import log
+from bot.db import DataBase
+from bot.logger import log
 
 loop = asyncio.get_event_loop()
 
@@ -25,6 +25,6 @@ loop.run_until_complete(
     )
 )
 
-from stickdistort.utils import AdminFilter
+from bot.utils import AdminFilter
 dp.filters_factory.bind(AdminFilter)
 bot.parse_mode = "html"

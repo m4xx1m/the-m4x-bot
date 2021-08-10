@@ -2,8 +2,8 @@ import os
 import glob
 import importlib.util
 from aiogram import executor
-from stickdistort.logger import log
-from stickdistort.misc import dp
+from bot.logger import log
+from bot.misc import dp
 
 
 def init_modules():

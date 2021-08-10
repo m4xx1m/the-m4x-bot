@@ -1,6 +1,6 @@
 import asyncio
 import sqlite3
-from stickdistort.logger import log
+from bot.logger import log
 
 
 class DataBase:

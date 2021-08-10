@@ -1,5 +1,5 @@
-from stickdistort.logger import log
-from stickdistort.misc import bot, loop
+from bot.logger import log
+from bot.misc import bot, loop
 
 
 def register():

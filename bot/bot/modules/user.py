@@ -2,11 +2,11 @@ import io
 import asyncio
 from aiogram import types
 from datetime import datetime
-from stickdistort import keyboards
-from stickdistort.distorter import Distorting
-from stickdistort.utils import check_user, compile_awl
-from stickdistort.misc import db, dp, langs, config, bot
-from stickdistort.logger import log
+from bot import keyboards
+from bot.distorter import Distorting
+from bot.utils import check_user, compile_awl
+from bot.misc import db, dp, langs, config, bot
+from bot.logger import log
 
 
 def format_all_commands(all_commands: dict, lang_code) -> str:

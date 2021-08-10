@@ -1,7 +1,7 @@
 from aiogram import types
 from datetime import datetime
-from stickdistort.logger import log
-from stickdistort.misc import db, dp
+from bot.logger import log
+from bot.misc import db, dp
 
 
 async def tester(message: types.Message):

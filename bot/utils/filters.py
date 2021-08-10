@@ -1,5 +1,5 @@
 from aiogram import types
-from stickdistort.misc import db
+from bot.misc import db
 from aiogram.dispatcher.filters import BoundFilter
 
 

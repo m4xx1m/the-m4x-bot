@@ -2,9 +2,9 @@ import sys
 import traceback
 from meval import meval
 from aiogram import types
-from stickdistort.logger import log
-from stickdistort.utils import compile_awl, get_uptime
-from stickdistort.misc import config, dp, db, bot
+from bot.logger import log
+from bot.utils import compile_awl, get_uptime
+from bot.misc import config, dp, db, bot
 
 
 async def evalute_command(message: types.Message, is_exec=False):

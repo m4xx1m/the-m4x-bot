@@ -1,6 +1,6 @@
 from datetime import datetime
-from stickdistort.logger import log
-from stickdistort.misc import db, langs
+from bot.logger import log
+from bot.misc import db, langs
 
 
 def compile_awl(  # Answer With Lang

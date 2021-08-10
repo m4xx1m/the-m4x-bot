@@ -1,7 +1,7 @@
 from aiogram import types
-from stickdistort import keyboards
-from stickdistort.misc import db, dp
-from stickdistort.utils import compile_awl
+from bot import keyboards
+from bot.misc import db, dp
+from bot.utils import compile_awl
 
 
 async def inliner(query: types.CallbackQuery):
