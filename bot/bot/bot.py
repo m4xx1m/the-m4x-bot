@@ -10,7 +10,7 @@ def init_modules():
     loaded_modules: list = []
     log.info(f"Loading modules")
 
-    for _file in glob.glob(f"stickdistort/bot/modules/*.py"):
+    for _file in glob.glob(f"bot/bot/modules/*.py"):
         _module_name = os.path.basename(_file).split(".py")[0]
         log.info(f"Loading module {_module_name}")
 
